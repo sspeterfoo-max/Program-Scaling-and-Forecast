@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Contractors Accelerator — Scaling & Outcomes Tool</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; background: #f6f7f9; color: #111; }
+    header { padding: 18px 16px; background: #fff; border-bottom: 1px solid #e6e8ec; }
+    header h1 { margin: 0 0 4px; font-size: 18px; }
+    header p { margin: 0; color: #444; font-size: 13px; max-width: 1100px; }
+    main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 14px; }
+    section { background: #fff; border: 1px solid #e6e8ec; border-radius: 10px; padding: 14px; }
+    h2 { font-size: 14px; margin: 0 0 10px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    label { display: block; font-size: 12px; color: #333; margin-bottom: 4px; }
+    input, select { width: 100%; padding: 9px 10px; border: 1px solid #d7dbe3; border-radius: 8px; font-size: 14px; background: #fff; }
+    input:focus, select:focus { outline: 2px solid #cfe0ff; border-color: #8fb3ff; }
+    .hint { font-size: 11px; color: #666; margin-top: 4px; }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    button {
+      border: 1px solid #d7dbe3; background: #fff; padding: 9px 10px; border-radius: 8px;
+      cursor: pointer; font-size: 13px;
+    }
+    button:hover { background: #f3f5f8; }
+    .kpi { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .card { border: 1px solid #eef0f4; border-radius: 10px; padding: 12px; background: #fbfbfc; }
+    .card .name { font-size: 12px; color: #444; }
+    .card .value { font-size: 18px; margin-top: 4px; font-weight: 650; }
+    .small { font-size: 12px; color: #555; margin-top: 6px; }
+    .mono { font-variant-numeric: tabular-nums; }
+    .divider { height: 1px; background: #eef0f4; margin: 12px 0; }
+
+    .scenarioGrid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .scenarioCard { border: 1px solid #eef0f4; border-radius: 10px; padding: 10px; background: #fff; }
+    .scenarioTitle { font-size: 12px; color: #333; font-weight: 650; margin-bottom: 6px; }
+    .scenarioLine { font-size: 12px; color: #444; margin: 4px 0; display: flex; justify-content: space-between; gap: 8px; }
+    .pill { font-size: 11px; border: 1px solid #e1e5ee; padding: 2px 8px; border-radius: 999px; color: #444; background: #fafbfd; }
+
+    footer { padding: 10px 16px; color: #666; font-size: 12px; max-width: 1180px; margin: 0 auto; }
+    @media (max-width: 1020px) { main { grid-template-columns: 1fr; } .scenarioGrid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+
+<body>
+<header>
+  <h1>Contractors Accelerator — Scaling & Outcomes Calculator</h1>
+  <p>
+    Models a contractor readiness accelerator with <b>cohorts + 1:1 TA</b>, predicts <b>bids submitted</b> (leading)
+    and <b>contracts won</b> (lagging), estimates <b>staffing + budget</b>, and computes <b>probability-weighted contract value</b>.
+    Includes <b>In-house vs Partner-heavy vs Hybrid</b> scenario comparison.
+  </p>
+</header>
+
+<main>
+  <section>
+    <h2>Inputs</h2>
+
+    <div class="row" style="margin-bottom:10px;">
+      <button id="btnDefaults">Load Contractors Accelerator defaults</button>
+      <button id="btnCopy">Copy shareable summary</button>
+      <span id="copyStatus" class="hint"></span>
+    </div>
+
+    <div class="grid">
+      <div>
+        <label for="weeks">Scaling period (weeks)</label>
+        <input id="weeks" type="number" min="1" step="1" value="12">
+        <div class="hint">Example: 12 weeks (one quarter)</div>
+      </div>
+
+      <div>
+        <label for="firms">Total firms served in this period</label>
+        <input id="firms" type="number" min="1" step="1" value="30">
+        <div class="hint">Total contractors supported (all cohorts combined)</div>
+      </div>
+
+      <div>
+        <label for="cohorts"># of cohorts</label>
+        <input id="cohorts" type="number" min="1" step="1" value="2">
+        <div class="hint">How many cohort groups you will run in the period</div>
+      </div>
+
+      <div>
+        <label for="sessionsPerCohort">Sessions per cohort</label>
+        <input id="sessionsPerCohort" type="number" min="1" step="1" value="6">
+        <div class="hint">Workshops/classes per cohort</div>
+      </div>
+
+      <div>
+        <label for="sessionHours">Hours per session</label>
+        <input id="sessionHours" type="number" min="0.5" step="0.5" value="2">
+        <div class="hint">Instruction time per session</div>
+      </div>
+
+      <div>
+        <label for="attendanceRate">Avg attendance rate (%)</label>
+        <input id="attendanceRate" type="number" min="0" max="100" step="1" value="80">
+        <div class="hint">Attendance-adjusted cohort delivery hours</div>
+      </div>
+
+      <div>
+        <label for="oneOnOneHoursPerFirm">1:1 TA hours per firm (avg)</label>
+        <input id="oneOnOneHoursPerFirm" type="number" min="0" step="0.5" value="10">
+        <div class="hint">Advising/coaching time per firm across the period</div>
+      </div>
+
+      <div>
+        <label for="adminPct">Admin overhead (% of delivery hours)</label>
+        <input id="adminPct" type="number" min="0" step="1" value="25">
+        <div class="hint">Scheduling, notes, reporting, partner coordination</div>
+      </div>
+
+      <div>
+        <label for="coachBillableHrsWk">Coach billable hours / week / FTE</label>
+        <input id="coachBillableHrsWk" type="number" min="1" step="1" value="22">
+        <div class="hint">Realistic: 18–24</div>
+      </div>
+
+      <div>
+        <label for="opsFirmsPerWk">Ops/Data/QA capacity (firms/week per ops FTE)</label>
+        <input id="opsFirmsPerWk" type="number" min="1" step="1" value="10">
+        <div class="hint">Higher-touch ops for contracting/compliance and partner mgmt</div>
+      </div>
+
+      <div>
+        <label for="coachLoadedYr">Coach loaded cost / FTE / year ($)</label>
+        <input id="coachLoadedYr" type="number" min="0" step="1000" value="140000">
+        <div class="hint">Salary + benefits + payroll burden</div>
+      </div>
+
+      <div>
+        <label for="opsLoadedYr">Ops loaded cost / FTE / year ($)</label>
+        <input id="opsLoadedYr" type="number" min="0" step="1000" value="120000">
+        <div class="hint">Ops lead / data / QA / coordinator</div>
+      </div>
+
+      <div>
+        <label for="nonLaborPerFirm">Non-labor cost per firm ($)</label>
+        <input id="nonLaborPerFirm" type="number" min="0" step="10" value="250">
+        <div class="hint">Tools, events, translation, stipends (if any)</div>
+      </div>
+
+      <div>
+        <label for="overheadPct">Org overhead (% of direct costs)</label>
+        <input id="overheadPct" type="number" min="0" step="1" value="15">
+        <div class="hint">Facilities, finance, HR, leadership allocation</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <h2>Outcomes</h2>
+    <div class="grid">
+      <div>
+        <label for="bidsPerFirm">Avg bids submitted per firm</label>
+        <input id="bidsPerFirm" type="number" min="0" step="0.1" value="1.2">
+        <div class="hint">Leading indicator (submissions, not wins)</div>
+      </div>
+
+      <div>
+        <label for="winRatePct">Win rate (% of bids that win)</label>
+        <input id="winRatePct" type="number" min="0" max="100" step="1" value="20">
+        <div class="hint">Lagging indicator; often 10–30% depending on readiness</div>
+      </div>
+
+      <div>
+        <label for="avgContractValue">Avg contract value ($)</label>
+        <input id="avgContractValue" type="number" min="0" step="1000" value="90000">
+        <div class="hint">Used for simple (non-weighted) estimate</div>
+      </div>
+
+      <div>
+        <label for="pipelineProbPct">Pipeline weighting: avg probability per bid (%)</label>
+        <input id="pipelineProbPct" type="number" min="0" max="100" step="1" value="35">
+        <div class="hint">Use “probability-weighted” expected value (more realistic)</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <h2>Scenario comparison</h2>
+    <div class="grid">
+      <div>
+        <label for="scenarioMode">Scenario mode</label>
+        <select id="scenarioMode">
+          <option value="compare" selected>Compare all scenarios (In-house / Partner-heavy / Hybrid)</option>
+          <option value="single">Single scenario only (use Custom partner share)</option>
+        </select>
+        <div class="hint">Compare side-by-side or run one chosen model</div>
+      </div>
+
+      <div>
+        <label for="customPartnerShare">Custom: % of delivery hours done by partners</label>
+        <input id="customPartnerShare" type="number" min="0" max="100" step="1" value="20">
+        <div class="hint">Used when “Single scenario only” is selected</div>
+      </div>
+
+      <div>
+        <label for="partnerCostHr">Partner cost per delivery hour ($)</label>
+        <input id="partnerCostHr" type="number" min="0" step="5" value="75">
+        <div class="hint">Set to 0 if in-kind</div>
+      </div>
+
+      <div>
+        <label>Pre-set scenario shares</label>
+        <div class="row">
+          <span class="pill">In-house: 0%</span>
+          <span class="pill">Hybrid: 20%</span>
+          <span class="pill">Partner-heavy: 60%</span>
+        </div>
+        <div class="hint">You can still adjust partner cost/hour above</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Results (Primary)</h2>
+    <div class="kpi">
+      <div class="card">
+        <div class="name">Total delivery hours (cohort + 1:1, incl admin)</div>
+        <div id="totHours" class="value mono">—</div>
+        <div class="small">Attendance-adjusted cohort hours + 1:1 hours</div>
+      </div>
+      <div class="card">
+        <div class="name">Ops/Data/QA FTE needed</div>
+        <div id="opsFTE" class="value mono">—</div>
+        <div class="small">Based on firms/week capacity</div>
+      </div>
+
+      <div class="card">
+        <div class="name">Expected bids submitted (#)</div>
+        <div id="bids" class="value mono">—</div>
+        <div class="small">Firms × avg bids per firm</div>
+      </div>
+      <div class="card">
+        <div class="name">Expected contract wins (#)</div>
+        <div id="wins" class="value mono">—</div>
+        <div class="small">Bids × win rate</div>
+      </div>
+
+      <div class="card">
+        <div class="name">Probability-weighted expected contract value</div>
+        <div id="pwValue" class="value mono">—</div>
+        <div class="small">Bids × avg contract value × avg probability</div>
+      </div>
+      <div class="card">
+        <div class="name">Simple expected contract value</div>
+        <div id="simpleValue" class="value mono">—</div>
+        <div class="small">Wins × avg contract value</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <h2>Scenario comparison (Scaling + Budget)</h2>
+    <div id="scenarioBlock" class="scenarioGrid"></div>
+
+    <div class="card" style="margin-top:10px;">
+      <div class="name">Operational detail</div>
+      <div id="details" class="small mono" style="margin-top:6px; white-space:pre-wrap;">—</div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Notes:
+  <ul>
+    <li><b>Cohort hours</b> assume one facilitator hour per session hour (adjust by increasing session hours or adding a multiplier in a future iteration).</li>
+    <li><b>Probability-weighted value</b> is useful for pipeline reporting even before contracts are won.</li>
+    <li>Use scenario compare to estimate the tradeoff between internal staffing vs partner spend.</li>
+  </ul>
+</footer>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  function money(n) {
+    if (!isFinite(n)) return "N/A";
+    return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+  }
+  function num(n, d=2) {
+    if (!isFinite(n)) return "N/A";
+    return new Intl.NumberFormat(undefined, { maximumFractionDigits: d, minimumFractionDigits: d }).format(n);
+  }
+  function num0(n) {
+    if (!isFinite(n)) return "N/A";
+    return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
+  }
+
+  function readInputs() {
+    return {
+      weeks: +$("weeks").value,
+      firms: +$("firms").value,
+      cohorts: +$("cohorts").value,
+      sessionsPerCohort: +$("sessionsPerCohort").value,
+      sessionHours: +$("sessionHours").value,
+      attendanceRate: +$("attendanceRate").value,
+      oneOnOneHoursPerFirm: +$("oneOnOneHoursPerFirm").value,
+      adminPct: +$("adminPct").value,
+      coachBillableHrsWk: +$("coachBillableHrsWk").value,
+      opsFirmsPerWk: +$("opsFirmsPerWk").value,
+      coachLoadedYr: +$("coachLoadedYr").value,
+      opsLoadedYr: +$("opsLoadedYr").value,
+      nonLaborPerFirm: +$("nonLaborPerFirm").value,
+      overheadPct: +$("overheadPct").value,
+
+      bidsPerFirm: +$("bidsPerFirm").value,
+      winRatePct: +$("winRatePct").value,
+      avgContractValue: +$("avgContractValue").value,
+      pipelineProbPct: +$("pipelineProbPct").value,
+
+      scenarioMode: $("scenarioMode").value,
+      customPartnerShare: +$("customPartnerShare").value,
+      partnerCostHr: +$("partnerCostHr").value
+    };
+  }
+
+  function clamp(x, lo, hi) { return Math.min(hi, Math.max(lo, x)); }
+
+  function computeBaseHours(x) {
+    const weeks = Math.max(1, x.weeks);
+    const firms = Math.max(1, x.firms);
+    const cohorts = Math.max(1, x.cohorts);
+    const sessions = Math.max(1, x.sessionsPerCohort);
+    const sessionHours = Math.max(0, x.sessionHours);
+    const attend = clamp(x.attendanceRate, 0, 100) / 100;
+
+    // Cohort delivery hours: cohorts * sessions * hours * attendance adjustment
+    // This is "facilitation hours" (one facilitator). If you have co-facilitators,
+    // increase sessionHours or add a multiplier in a future version.
+    const cohortHours = cohorts * sessions * sessionHours * attend;
+
+    // 1:1 hours: firms * avg 1:1 hours per firm
+    const oneOnOneHours = firms * Math.max(0, x.oneOnOneHoursPerFirm);
+
+    const deliveryHours = cohortHours + oneOnOneHours;
+    const totalDeliveryHours = deliveryHours * (1 + Math.max(0, x.adminPct) / 100);
+
+    return { weeks, firms, cohortHours, oneOnOneHours, deliveryHours, totalDeliveryHours };
+  }
+
+  function computeOutcomes(x, firms) {
+    const bids = firms * Math.max(0, x.bidsPerFirm);
+    const winRate = clamp(x.winRatePct, 0, 100) / 100;
+    const wins = bids * winRate;
+
+    const avgContractValue = Math.max(0, x.avgContractValue);
+    const pipelineProb = clamp(x.pipelineProbPct, 0, 100) / 100;
+
+    const simpleValue = wins * avgContractValue;
+    const pwValue = bids * avgContractValue * pipelineProb; // probability-weighted expected value
+
+    return { bids, wins, simpleValue, pwValue };
+  }
+
+  function computeScenario(x, baseHours, partnerSharePct) {
+    const partnerShare = clamp(partnerSharePct, 0, 100) / 100;
+    const internalHours = baseHours.totalDeliveryHours * (1 - partnerShare);
+    const partnerHours = baseHours.totalDeliveryHours * partnerShare;
+
+    const coachHoursPerFTEPeriod = Math.max(1, x.coachBillableHrsWk) * baseHours.weeks;
+    const coachFTE = internalHours / coachHoursPerFTEPeriod;
+
+    const firmsPerWeek = baseHours.firms / baseHours.weeks;
+    const opsFTE = firmsPerWeek / Math.max(1, x.opsFirmsPerWk);
+
+    const coachWeeklyCost = Math.max(0, x.coachLoadedYr) / 52;
+    const opsWeeklyCost = Math.max(0, x.opsLoadedYr) / 52;
+
+    const laborCost = (coachFTE * coachWeeklyCost + opsFTE * opsWeeklyCost) * baseHours.weeks;
+    const partnerCost = partnerHours * Math.max(0, x.partnerCostHr);
+    const variableCost = baseHours.firms * Math.max(0, x.nonLaborPerFirm);
+
+    const directCost = laborCost + partnerCost + variableCost;
+    const fullyLoaded = directCost * (1 + Math.max(0, x.overheadPct) / 100);
+
+    const costPerFirm = fullyLoaded / baseHours.firms;
+
+    return {
+      partnerSharePct,
+      internalHours,
+      partnerHours,
+      coachFTE,
+      opsFTE,
+      laborCost,
+      partnerCost,
+      variableCost,
+      directCost,
+      fullyLoaded,
+      costPerFirm
+    };
+  }
+
+  function renderScenarioCard(title, tag, s, outcomes) {
+    const expectedWins = outcomes.wins;
+    const costPerWin = expectedWins > 0 ? (s.fullyLoaded / expectedWins) : Infinity;
+    const valueToCost_simple = s.fullyLoaded > 0 ? (outcomes.simpleValue / s.fullyLoaded) : Infinity;
+    const valueToCost_pw = s.fullyLoaded > 0 ? (outcomes.pwValue / s.fullyLoaded) : Infinity;
+
+    return `
+      <div class="scenarioCard">
+        <div class="scenarioTitle">${title} <span class="pill">${tag}</span></div>
+        <div class="scenarioLine"><span>Partner share</span><span class="mono">${num0(s.partnerSharePct)}%</span></div>
+        <div class="scenarioLine"><span>Coach FTE</span><span class="mono">${num(s.coachFTE, 2)}</span></div>
+        <div class="scenarioLine"><span>Ops FTE</span><span class="mono">${num(s.opsFTE, 2)}</span></div>
+        <div class="scenarioLine"><span>Fully-loaded budget</span><span class="mono">${money(s.fullyLoaded)}</span></div>
+        <div class="scenarioLine"><span>Cost / firm</span><span class="mono">${money(s.costPerFirm)}</span></div>
+        <div class="scenarioLine"><span>Cost / contract win</span><span class="mono">${money(costPerWin)}</span></div>
+        <div class="divider"></div>
+        <div class="scenarioLine"><span>Value-to-cost (simple)</span><span class="mono">${isFinite(valueToCost_simple) ? num(valueToCost_simple, 2) + "x" : "N/A"}</span></div>
+        <div class="scenarioLine"><span>Value-to-cost (prob-weighted)</span><span class="mono">${isFinite(valueToCost_pw) ? num(valueToCost_pw, 2) + "x" : "N/A"}</span></div>
+      </div>
+    `;
+  }
+
+  function compute() {
+    const x = readInputs();
+    const base = computeBaseHours(x);
+
+    // Outcomes (independent of partner share)
+    const outcomes = computeOutcomes(x, base.firms);
+
+    $("totHours").textContent = `${num0(base.totalDeliveryHours)} hrs`;
+    $("bids").textContent = num(outcomes.bids, 1);
+    $("wins").textContent = num(outcomes.wins, 1);
+    $("simpleValue").textContent = money(outcomes.simpleValue);
+    $("pwValue").textContent = money(outcomes.pwValue);
+
+    // Scenarios
+    const scenarioMode = x.scenarioMode;
+    const partnerShareCustom = clamp(x.customPartnerShare, 0, 100);
+
+    const scenarios = (scenarioMode === "compare")
+      ? [
+          { name: "In-house", share: 0, tag: "Delivery internal" },
+          { name: "Hybrid", share: 20, tag: "Some partner delivery" },
+          { name: "Partner-heavy", share: 60, tag: "Partner-led delivery" }
+        ]
+      : [
+          { name: "Custom", share: partnerShareCustom, tag: "User-defined share" }
+        ];
+
+    // Primary Ops FTE shown (from first scenario card) — but we also show in each scenario
+    // Ops FTE doesn't change with partner share in this simple model (it depends on firms/week),
+    // so take it from any computed scenario.
+    const computedScenarios = scenarios.map(sc => ({
+      meta: sc,
+      res: computeScenario(x, base, sc.share)
+    }));
+
+    $("opsFTE").textContent = num(computedScenarios[0].res.opsFTE, 2);
+
+    $("scenarioBlock").innerHTML = computedScenarios
+      .map(s => renderScenarioCard(s.meta.name, s.meta.tag, s.res, outcomes))
+      .join("");
+
+    $("details").textContent =
+      `Cohort hours (attendance-adjusted): ${num0(base.cohortHours)} hrs\n` +
+      `1:1 TA hours: ${num0(base.oneOnOneHours)} hrs\n` +
+      `Total delivery hours (before admin): ${num0(base.deliveryHours)} hrs\n` +
+      `Admin overhead: ${num0(x.adminPct)}% → Total hours (incl admin): ${num0(base.totalDeliveryHours)} hrs\n` +
+      `Firms/week: ${num(base.firms / base.weeks, 2)} | Ops capacity assumption: ${num0(Math.max(1,x.opsFirmsPerWk))} firms/week per ops FTE\n` +
+      `Bids: firms × bids/firm = ${num0(base.firms)} × ${num(x.bidsPerFirm,1)} = ${num(outcomes.bids,1)}\n` +
+      `Wins: bids × win rate = ${num(outcomes.bids,1)} × ${num0(x.winRatePct)}% = ${num(outcomes.wins,1)}\n` +
+      `Prob-weighted value: bids × avg value × avg prob = ${num(outcomes.bids,1)} × ${money(x.avgContractValue)} × ${num0(x.pipelineProbPct)}% = ${money(outcomes.pwValue)}`;
+  }
+
+  async function copySummary() {
+    const x = readInputs();
+    const text =
+`Contractors Accelerator — Scaling & Outcomes Summary
+Period: ${x.weeks} weeks | Firms served: ${x.firms}
+Cohorts: ${x.cohorts} | Sessions/cohort: ${x.sessionsPerCohort} | Session hrs: ${x.sessionHours} | Attendance: ${x.attendanceRate}%
+1:1 TA hrs/firm: ${x.oneOnOneHoursPerFirm} | Admin overhead: ${x.adminPct}%
+Staff productivity: Coach billable hrs/wk per FTE: ${x.coachBillableHrsWk} | Ops firms/wk per ops FTE: ${x.opsFirmsPerWk}
+Costs: Coach loaded/yr: $${x.coachLoadedYr} | Ops loaded/yr: $${x.opsLoadedYr} | Non-labor/firm: $${x.nonLaborPerFirm} | Overhead: ${x.overheadPct}%
+Outcomes: bids/firm: ${x.bidsPerFirm} | Win rate: ${x.winRatePct}% | Avg contract value: $${x.avgContractValue} | Avg probability per bid: ${x.pipelineProbPct}%
+
+Primary results:
+Total delivery hours (incl admin): ${$("totHours").textContent}
+Expected bids: ${$("bids").textContent}
+Expected wins: ${$("wins").textContent}
+Prob-weighted expected value: ${$("pwValue").textContent}
+Simple expected value: ${$("simpleValue").textContent}
+
+Scenarios shown: ${$("scenarioMode").value === "compare" ? "In-house / Hybrid / Partner-heavy" : "Custom partner share"}`
+    ;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      $("copyStatus").textContent = "Copied summary to clipboard.";
+      setTimeout(() => $("copyStatus").textContent = "", 2000);
+    } catch (e) {
+      $("copyStatus").textContent = "Copy failed (browser permissions).";
+      setTimeout(() => $("copyStatus").textContent = "", 2500);
+    }
+  }
+
+  function loadDefaults() {
+    // Practical baseline assumptions for a contractor readiness accelerator (tune anytime).
+    $("weeks").value = 12;
+    $("firms").value = 30;
+
+    $("cohorts").value = 2;
+    $("sessionsPerCohort").value = 6;
+    $("sessionHours").value = 2;
+    $("attendanceRate").value = 80;
+
+    $("oneOnOneHoursPerFirm").value = 10;
+    $("adminPct").value = 25;
+
+    $("coachBillableHrsWk").value = 22;
+    $("opsFirmsPerWk").value = 10;
+
+    $("coachLoadedYr").value = 140000;
+    $("opsLoadedYr").value = 120000;
+
+    $("nonLaborPerFirm").value = 250;
+    $("overheadPct").value = 15;
+
+    $("bidsPerFirm").value = 1.2;
+    $("winRatePct").value = 20;
+    $("avgContractValue").value = 90000;
+    $("pipelineProbPct").value = 35;
+
+    $("scenarioMode").value = "compare";
+    $("customPartnerShare").value = 20;
+    $("partnerCostHr").value = 75;
+
+    compute();
+  }
+
+  document.querySelectorAll("input,select").forEach(el => el.addEventListener("input", compute));
+  $("btnDefaults").addEventListener("click", loadDefaults);
+  $("btnCopy").addEventListener("click", copySummary);
+
+  compute();
+</script>
+</body>
+</html>
